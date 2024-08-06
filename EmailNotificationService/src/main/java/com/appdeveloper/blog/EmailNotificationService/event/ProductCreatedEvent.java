@@ -1,8 +1,8 @@
 package com.appdeveloper.blog.EmailNotificationService.event;
 
-import lombok.*;
-
 import java.math.BigDecimal;
+
+import lombok.*;
 
 @Getter
 @Setter

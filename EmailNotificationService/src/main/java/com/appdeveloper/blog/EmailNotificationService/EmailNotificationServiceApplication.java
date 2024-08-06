@@ -8,13 +8,12 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication
 public class EmailNotificationServiceApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(EmailNotificationServiceApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(EmailNotificationServiceApplication.class, args);
+    }
 
-	@Bean
-	public RestTemplate restTemplate() {
-		return new RestTemplate();
-	}
-
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
 }

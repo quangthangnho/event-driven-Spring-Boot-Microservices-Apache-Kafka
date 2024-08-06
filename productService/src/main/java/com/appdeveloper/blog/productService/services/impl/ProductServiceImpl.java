@@ -4,6 +4,7 @@ import com.appdeveloper.blog.productService.dto.request.CreateProductReqDto;
 import com.appdeveloper.blog.productService.event.ProductCreatedEvent;
 import com.appdeveloper.blog.productService.services.ProductService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -53,7 +54,11 @@ public class ProductServiceImpl implements ProductService {
                 .build();
 
         log.info("Before sending message to Kafka");
-        SendResult<String, ProductCreatedEvent> result = kafkaTemplate.send(productTopicName, productId, productCreatedEvent).get();
+
+        ProducerRecord<String, ProductCreatedEvent> producerRecord = new ProducerRecord<>(productTopicName, productId, productCreatedEvent);
+        producerRecord.headers().add("messageId", UUID.randomUUID().toString().getBytes());
+
+        SendResult<String, ProductCreatedEvent> result = kafkaTemplate.send(producerRecord).get();
         log.info("After sending message to Kafka");
         log.info("Message sent to Kafka with offset: {}", result.getRecordMetadata().offset());
         log.info("Message sent to Kafka with partition: {}", result.getRecordMetadata().partition());

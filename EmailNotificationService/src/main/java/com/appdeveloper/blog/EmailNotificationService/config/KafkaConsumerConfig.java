@@ -1,10 +1,8 @@
 package com.appdeveloper.blog.EmailNotificationService.config;
 
-import com.appdeveloper.blog.EmailNotificationService.error.NotRetryableException;
-import com.appdeveloper.blog.EmailNotificationService.error.RetryableException;
-import com.appdeveloper.blog.EmailNotificationService.event.ProductCreatedEvent;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -21,8 +19,11 @@ import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.util.backoff.FixedBackOff;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.appdeveloper.blog.EmailNotificationService.error.NotRetryableException;
+import com.appdeveloper.blog.EmailNotificationService.error.RetryableException;
+import com.appdeveloper.blog.EmailNotificationService.event.ProductCreatedEvent;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 public class KafkaConsumerConfig {
@@ -50,19 +51,24 @@ public class KafkaConsumerConfig {
     public ConsumerFactory<String, ProductCreatedEvent> productCreatedEventConsumerFactory() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return new DefaultKafkaConsumerFactory<>(consumerConfigs(),
+        return new DefaultKafkaConsumerFactory<>(
+                consumerConfigs(),
                 new StringDeserializer(),
                 new ErrorHandlingDeserializer<>(new JsonDeserializer<>(ProductCreatedEvent.class, mapper, false)));
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, ProductCreatedEvent> productCreatedEventKafkaListenerContainerFactory(
-            ConsumerFactory<String, ProductCreatedEvent> consumerFactory, KafkaTemplate<String, Object> kafkaTemplate) {
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler(new DeadLetterPublishingRecoverer(kafkaTemplate), new FixedBackOff(5000, 3));
+    public ConcurrentKafkaListenerContainerFactory<String, ProductCreatedEvent>
+            productCreatedEventKafkaListenerContainerFactory(
+                    ConsumerFactory<String, ProductCreatedEvent> consumerFactory,
+                    KafkaTemplate<String, Object> kafkaTemplate) {
+        DefaultErrorHandler errorHandler =
+                new DefaultErrorHandler(new DeadLetterPublishingRecoverer(kafkaTemplate), new FixedBackOff(5000, 3));
         errorHandler.addNotRetryableExceptions(NotRetryableException.class);
         errorHandler.addRetryableExceptions(RetryableException.class);
 
-        ConcurrentKafkaListenerContainerFactory<String, ProductCreatedEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, ProductCreatedEvent> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
         factory.setCommonErrorHandler(errorHandler);
         return factory;
