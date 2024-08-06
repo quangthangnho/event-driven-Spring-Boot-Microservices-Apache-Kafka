@@ -4,6 +4,7 @@ import com.appdeveloper.blog.productService.dto.request.CreateProductReqDto;
 import com.appdeveloper.blog.productService.event.ProductCreatedEvent;
 import com.appdeveloper.blog.productService.services.ProductService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,9 @@ import java.util.concurrent.ExecutionException;
 @Service
 @Slf4j
 public class ProductServiceImpl implements ProductService {
+
+    @Value("${kafka.topic.name}")
+    private String productTopicName;
 
     private final KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate;
 
@@ -34,7 +38,7 @@ public class ProductServiceImpl implements ProductService {
                 .title(createProductReqDto.getTitle())
                 .build();
 
-        kafkaTemplate.send("product-created-event-topic", productId, productCreatedEvent);
+        kafkaTemplate.send(productTopicName, productId, productCreatedEvent);
         return productId;
     }
 
@@ -49,7 +53,7 @@ public class ProductServiceImpl implements ProductService {
                 .build();
 
         log.info("Before sending message to Kafka");
-        SendResult<String, ProductCreatedEvent> result = kafkaTemplate.send("product-created-event-topic", productId, productCreatedEvent).get();
+        SendResult<String, ProductCreatedEvent> result = kafkaTemplate.send(productTopicName, productId, productCreatedEvent).get();
         log.info("After sending message to Kafka");
         log.info("Message sent to Kafka with offset: {}", result.getRecordMetadata().offset());
         log.info("Message sent to Kafka with partition: {}", result.getRecordMetadata().partition());
